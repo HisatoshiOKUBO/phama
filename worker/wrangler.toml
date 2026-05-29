@@ -1,0 +1,13 @@
+name = "pharma-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# ローカル開発用（本番は Cloudflare Dashboard の環境変数で設定）
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_KEY
+[vars]
+# SUPABASE_URL と SUPABASE_KEY は `wrangler secret put` で設定してください
+# （このファイルに直接書かないこと）
+
+[placement]
+mode = "smart"

@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a2e22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>薬品在庫管理 | サイボクファーム</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  /* 指定カラー */
+  --col-danger:   #c0392b;
+  --col-confirm:  #1a2e22;
+  --col-green:    #15803d;
+  --col-ui-mid:   #9ca3af;
+  --col-ui-light: #e5e7eb;
+  --col-card-bg:  #f6f8f5;
+  --col-white:    #ffffff;
+  --col-text:     #1a1a1a;
+  --col-text-sub: #374151;
+
+  /* 補助色 */
+  --col-border:   #e5e7eb;
+  --col-focus:    rgba(21,128,61,.18);
+  --col-hover:    #f0f4f0;
+  --col-nav-bg:   #1a2e22;
+  --col-nav-act:  #15803d;
+  --col-amber:    #b45309;
+  --col-amber-bg: #fef3c7;
+
+  /* タイポグラフィ */
+  --font: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+  --fs-base:  15px;
+  --fs-title: 17px;
+  --fs-label: 13px;
+  --fs-small: 12px;
+  --fs-time:  16px;
+
+  /* シャドウ・ラジウス */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.08);
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: #f0f2ef;
+  color: var(--col-text);
+  min-height: 100vh;
+  font-size: var(--fs-base);
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.6;
+}
+
+/* ===== ナビゲーション ===== */
+#app-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #f0f2ef;
+  z-index: 100;
+  box-shadow: 0 1px 0 var(--col-border);
+  border-bottom: 1px solid var(--col-border);
+}
+
+/* 1行目: SAIBOKUロゴのみ中央 */
+.nav-header-row1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 18px 4px;
+}
+.nav-header-row1 img {
+  height: 26px;
+  width: auto;
+  display: block;
+}
+
+/* 2行目: アイコン+テキスト左 ＋ バッジ右 */
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 18px 8px;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--col-confirm);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .04em;
+}
+
+.nav-logo .icon {
+  width: 26px; height: 26px;
+  background: var(--col-green);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.alert-badge {
+  background: var(--col-danger);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: .02em;
+}
+
+.nav-tabs {
+  display: flex;
+  border-top: 1px solid var(--col-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+  flex: 1;
+  min-width: 64px;
+  padding: 9px 6px 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--col-ui-mid);
+  font-family: var(--font);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.nav-tab .tab-icon { font-size: 17px; }
+.nav-tab.active {
+  color: var(--col-confirm);
+  border-bottom-color: var(--col-green);
+}
+.nav-tab:hover { color: var(--col-text-sub); }
+
+/* ===== メインコンテンツ ===== */
+#app-main {
+  padding-top: 108px;
+  padding-bottom: 32px;
+  min-height: 100vh;
+}
+
+.page {
+  display: none;
+  padding: 20px 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.page.active { display: block; }
+
+/* ===== カード ===== */
+.card {
+  background: var(--col-white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--col-border);
+  padding: 22px 20px;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: #1a2e22;
+  margin: -22px -20px 18px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f2ef;
+  border-bottom: 1px solid var(--col-border);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+/* ===== フォーム ===== */
+label {
+  display: block;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--col-text-sub);
+  margin-bottom: 5px;
+}
+label.required::after {
+  content: ' *';
+  color: var(--col-danger);
+}
+
+select,
+input[type=text],
+input[type=number],
+input[type=date],
+textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1.5px solid var(--col-border);
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--col-text);
+  background: var(--col-white);
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input[type=time] { font-size: var(--fs-time); }
+
+select:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--col-green);
+  box-shadow: 0 0 0 3px var(--col-focus);
+}
+
+.form-row { margin-bottom: 13px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* ===== ボタン ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: 1.5px solid transparent;
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .13s, border-color .13s, opacity .13s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { opacity: .82; }
+
+.btn-primary {
+  background: var(--col-confirm);
+  color: white;
+  width: 100%;
+  border-color: var(--col-confirm);
+}
+.btn-primary:hover { background: #15803d; border-color: #15803d; }
+
+.btn-secondary {
+  background: var(--col-white);
+  color: var(--col-text-sub);
+  border-color: var(--col-border);
+}
+.btn-secondary:hover { background: var(--col-hover); }
+
+.btn-danger {
+  background: #fef2f2;
+  color: var(--col-danger);
+  border-color: #fecaca;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+.btn-amber {
+  background: var(--col-amber-bg);
+  color: var(--col-amber);
+  border-color: #fde68a;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: var(--fs-label);
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.btn-row .btn { flex: 1; }
+
+/* ===== バーコードスキャナー ===== */
+.scanner-wrap {
+  position: relative;
+  background: #000;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.scanner-wrap video {
+  width: 100%;
+  display: block;
+  border-radius: var(--r-md);
+}
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.scanner-line {
+  width: 80%; height: 2px;
+  background: var(--col-green);
+  box-shadow: 0 0 8px rgba(21,128,61,.6);
+  animation: scanMove 2s ease-in-out infinite alternate;
+}
+@keyframes scanMove {
+  from { transform: translateY(-60px); }
+  to   { transform: translateY(60px); }
+}
+.scanner-guide {
+  width: 80%; height: 120px;
+  border: 2px solid rgba(21,128,61,.5);
+  border-radius: 6px;
+  position: absolute;
+}
+
+/* ===== モーダル ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--col-white);
+  border-radius: var(--r-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--col-border);
+}
+.modal-header {
+  padding: 20px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: var(--fs-title); font-weight: 700; color: var(--col-confirm); }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--col-ui-mid);
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+}
+.modal-close:hover { background: var(--col-hover); }
+.modal-body { padding: 20px; }
+
+/* ===== アラートバナー ===== */
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  margin-bottom: 13px;
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+.alert-danger  { background: #fef2f2; color: var(--col-danger); border-color: #fecaca; }
+.alert-success { background: #f0fdf4; color: var(--col-green);  border-color: #bbf7d0; }
+.alert-amber   { background: var(--col-amber-bg); color: var(--col-amber); border-color: #fde68a; }
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ===== 在庫テーブル ===== */
+.stock-table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  background: var(--col-card-bg);
+  color: var(--col-text-sub);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  padding: 9px 10px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--col-border);
+}
+td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--col-ui-light);
+  vertical-align: middle;
+  color: var(--col-text);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--col-card-bg); }
+tr.alert-row td { background: #fef2f2; }
+tr.alert-row:hover td { background: #fee2e2; }
+
+/* ===== バッジ ===== */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.badge-green { background: #dcfce7; color: var(--col-confirm); }
+.badge-amber { background: var(--col-amber-bg); color: var(--col-amber); }
+.badge-red   { background: #fee2e2; color: var(--col-danger); }
+.badge-blue  { background: #dbeafe; color: #1d4ed8; }
+
+/* ===== セクション見出し ===== */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--col-ui-mid);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* ===== 薬品選択UI ===== */
+.kana-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.kana-tab {
+  padding: 4px 10px;
+  background: var(--col-white);
+  border: 1.5px solid var(--col-border);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .13s;
+  font-family: var(--font);
+  color: var(--col-text-sub);
+}
+.kana-tab.active, .kana-tab:hover {
+  background: var(--col-confirm);
+  border-color: var(--col-confirm);
+  color: white;
+}
+
+/* ===== トグルスイッチ ===== */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--col-ui-light);
+  margin-bottom: 14px;
+}
+.toggle-label { font-size: 14px; color: var(--col-text-sub); flex: 1; }
+.toggle {
+  position: relative;
+  width: 44px; height: 24px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--col-ui-light);
+  border-radius: 24px;
+  transition: .2s;
+  cursor: pointer;
+  border: 1.5px solid var(--col-border);
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 2px; top: 1px;
+  background: white;
+  border-radius: 50%;
+  transition: .2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,.18);
+}
+.toggle input:checked + .toggle-slider { background: var(--col-green); border-color: var(--col-green); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* ===== ダッシュボードグリッド ===== */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+@media (min-width: 480px) {
+  .dash-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.dash-card {
+  background: var(--col-white);
+  border: 1px solid var(--col-border);
+  border-radius: var(--r-lg);
+  padding: 18px 14px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.dash-card .val {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--col-confirm);
+  line-height: 1.15;
+  letter-spacing: -.01em;
+}
+.dash-card .lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--col-ui-mid);
+  margin-top: 4px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.dash-card.danger { border-color: #fecaca; background: #fef2f2; }
+.dash-card.danger .val { color: var(--col-danger); }
+
+/* ===== ローディング ===== */
+.spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid var(--col-ui-light);
+  border-top-color: var(--col-green);
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== フィルターバー ===== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+.filter-bar > * { flex: 1; min-width: 110px; }
+.filter-bar .btn { flex: 0 0 auto; }
+
+/* ===== 履歴リスト ===== */
+.log-item {
+  display: grid;
+  grid-template-columns: 80px auto 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--col-ui-light);
+}
+.log-item:last-child { border-bottom: none; }
+.log-date { font-size: var(--fs-small); color: var(--col-ui-mid); }
+.log-main { min-width: 0; }
+.log-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--col-text); }
+.log-sub  { font-size: 11px; color: var(--col-ui-mid); margin-top: 1px; }
+.log-qty  { font-size: 15px; font-weight: 700; text-align: right; }
+.log-qty.in-qty  { color: var(--col-green); }
+.log-qty.out-qty { color: var(--col-danger); }
+.log-stock-flow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.stock-num {
+  background: var(--col-card-bg);
+  border: 1px solid var(--col-border);
+  border-radius: var(--r-sm);
+  padding: 2px 6px;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.stock-num.after {
+  background: #e8f5e9;
+  border-color: #a5d6a7;
+}
+.stock-arrow { font-weight: 700; font-size: 12px; white-space: nowrap; }
+.stock-arrow.in-qty  { color: var(--col-green); }
+.stock-arrow.out-qty { color: var(--col-danger); }
+
+/* ===== マスター編集 ===== */
+.master-list { list-style: none; }
+.master-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--col-ui-light);
+}
+.master-item:last-child { border-bottom: none; }
+.master-item-name { flex: 1; font-size: 14px; color: var(--col-text); }
+
+/* ===== スキャン結果ハイライト ===== */
+.found-med {
+  background: var(--col-card-bg);
+  border: 1.5px solid var(--col-ui-light);
+  border-left: 3px solid var(--col-green);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.found-med-name   { font-weight: 700; font-size: var(--fs-base); color: var(--col-confirm); }
+.found-med-detail { font-size: var(--fs-label); color: var(--col-text-sub); margin-top: 2px; }
+
+/* ===== スマートフォン最適化 ===== */
+@media (max-width: 480px) {
+  .page { padding: 14px 12px; }
+  .card { padding: 16px 14px; }
+  .nav-tab { min-width: 56px; font-size: 10px; }
+  .nav-tab .tab-icon { font-size: 15px; }
+  th, td { padding: 8px 7px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ナビゲーション -->
+<nav id="app-nav">
+  <!-- 1行目: SAIBOKUロゴのみ中央 -->
+  <div class="nav-header-row1">
+    <img src="data:image/gif;base64,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" alt="SAIBOKU">
+  </div>
+  <!-- 2行目: アイコン+テキスト左 ＋ バッジ右 -->
+  <div class="nav-header">
+    <div class="nav-logo">
+      <div class="icon">💊</div>
+      <span>薬品在庫管理</span>
+    </div>
+    <div id="global-alert-badge" class="alert-badge" style="display:none" onclick="showPage('stock')">⚠ 在庫警告</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')" data-page="dashboard">
+      <span class="tab-icon">🏠</span>ホーム
+    </button>
+    <button class="nav-tab" onclick="showPage('stockin')" data-page="stockin">
+      <span class="tab-icon">📥</span>入庫
+    </button>
+    <button class="nav-tab" onclick="showPage('stockout')" data-page="stockout">
+      <span class="tab-icon">📤</span>出庫
+    </button>
+    <button class="nav-tab" onclick="showPage('stock')" data-page="stock">
+      <span class="tab-icon">📦</span>在庫
+    </button>
+    <button class="nav-tab" onclick="showPage('history')" data-page="history">
+      <span class="tab-icon">📋</span>履歴
+    </button>
+    <button class="nav-tab" onclick="showPage('master')" data-page="master">
+      <span class="tab-icon">⚙️</span>設定
+    </button>
+  </div>
+</nav>
+
+<main id="app-main">
+
+<!-- ===== ダッシュボード ===== -->
+<div class="page active" id="page-dashboard">
+  <div class="section-header">
+    <div class="section-title">ダッシュボード</div>
+    <div id="today-date" style="color:var(--col-ui-mid);font-size:var(--fs-small)"></div>
+  </div>
+  <div class="dash-grid" id="dash-stats">
+    <div class="dash-card"><div class="val" id="stat-total">-</div><div class="lbl">登録薬品数</div></div>
+    <div class="dash-card danger"><div class="val" id="stat-alert">-</div><div class="lbl">在庫警告</div></div>
+    <div class="dash-card"><div class="val" id="stat-in-today">-</div><div class="lbl">今日の入庫</div></div>
+    <div class="dash-card"><div class="val" id="stat-out-today">-</div><div class="lbl">今日の出庫</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠ 在庫警告リスト</div>
+    <div id="dash-alert-list"><div style="color:var(--col-ui-mid);font-size:14px">読み込み中…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 本日の取引</div>
+    <div id="dash-today-log"><div style="color:var(--col-ui-mid);font-size:14px">読み込み中…</div></div>
+  </div>
+</div>
+
+<!-- ===== 入庫 ===== -->
+<div class="page" id="page-stockin">
+  <div class="section-title" style="margin-bottom:14px">入庫登録</div>
+  <div class="card">
+    <div class="card-title">薬品の選択</div>
+    <div id="med-select-in">
+      <div class="toggle-row">
+        <span class="toggle-label">バーコードでスキャン</span>
+        <label class="toggle">
+          <input type="checkbox" id="scan-toggle-in" onchange="toggleScanner('in')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="scanner-area-in" style="display:none">
+        <div class="scanner-wrap">
+          <video id="video-in" playsinline autoplay muted></video>
+          <div class="scanner-overlay">
+            <div class="scanner-guide"></div>
+            <div class="scanner-line"></div>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:var(--fs-label);color:var(--col-ui-mid);margin-top:8px">バーコードをカメラに向けてください</p>
+      </div>
+      <div id="found-med-in" style="display:none"></div>
+      <div id="manual-select-in">
+        <div class="form-row">
+          <label>大分類</label>
+          <select id="cat-select-in" onchange="loadKana('in')">
+            <option value="">-- 大分類を選択 --</option>
+          </select>
+        </div>
+        <div class="form-row" id="kana-wrap-in" style="display:none">
+          <label>中分類（50音）</label>
+          <div class="kana-tabs" id="kana-tabs-in"></div>
+        </div>
+        <div class="form-row" id="med-wrap-in" style="display:none">
+          <label>薬品名 / 容量</label>
+          <select id="med-select-list-in" onchange="selectMedicine('in', this.value)">
+            <option value="">-- 薬品を選択 --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="in-form-card" style="display:none">
+    <div class="card-title">入庫数量の入力</div>
+    <div id="in-med-info" class="found-med"></div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="required">入庫数量</label>
+        <input type="number" id="in-quantity" min="1" value="1" placeholder="数量">
+      </div>
+      <div class="form-row">
+        <label class="required">入庫日</label>
+        <input type="date" id="in-date">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="required">担当者</label>
+      <select id="in-staff">
+        <option value="">-- 担当者を選択 --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>備考</label>
+      <input type="text" id="in-notes" placeholder="任意">
+    </div>
+    <div id="in-result"></div>
+    <button class="btn btn-primary" onclick="submitStockIn()">📥 入庫を登録する</button>
+  </div>
+</div>
+
+<!-- ===== 出庫 ===== -->
+<div class="page" id="page-stockout">
+  <div class="section-title" style="margin-bottom:14px">出庫登録</div>
+  <div class="card">
+    <div class="card-title">薬品の選択</div>
+    <div class="toggle-row">
+      <span class="toggle-label">バーコードでスキャン</span>
+      <label class="toggle">
+        <input type="checkbox" id="scan-toggle-out" onchange="toggleScanner('out')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div id="scanner-area-out" style="display:none">
+      <div class="scanner-wrap">
+        <video id="video-out" playsinline autoplay muted></video>
+        <div class="scanner-overlay">
+          <div class="scanner-guide"></div>
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:var(--fs-label);color:var(--col-ui-mid);margin-top:8px">バーコードをカメラに向けてください</p>
+    </div>
+    <div id="found-med-out" style="display:none"></div>
+    <div id="manual-select-out">
+      <div class="form-row">
+        <label>大分類</label>
+        <select id="cat-select-out" onchange="loadKana('out')">
+          <option value="">-- 大分類を選択 --</option>
+        </select>
+      </div>
+      <div class="form-row" id="kana-wrap-out" style="display:none">
+        <label>中分類（50音）</label>
+        <div class="kana-tabs" id="kana-tabs-out"></div>
+      </div>
+      <div class="form-row" id="med-wrap-out" style="display:none">
+        <label>薬品名 / 容量</label>
+        <select id="med-select-list-out" onchange="selectMedicine('out', this.value)">
+          <option value="">-- 薬品を選択 --</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="out-form-card" style="display:none">
+    <div class="card-title">出庫数量の入力</div>
+    <div id="out-med-info" class="found-med"></div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="required">出庫数量</label>
+        <input type="number" id="out-quantity" min="1" value="1" placeholder="数量">
+      </div>
+      <div class="form-row">
+        <label class="required">出庫日</label>
+        <input type="date" id="out-date">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="required">担当者</label>
+      <select id="out-staff">
+        <option value="">-- 担当者を選択 --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>備考</label>
+      <input type="text" id="out-notes" placeholder="任意">
+    </div>
+    <div id="out-result"></div>
+    <button class="btn btn-primary" onclick="submitStockOut()">📤 出庫を登録する</button>
+  </div>
+</div>
+
+<!-- ===== 在庫確認 ===== -->
+<div class="page" id="page-stock">
+  <div class="section-header">
+    <div class="section-title">在庫一覧</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm btn-secondary" onclick="exportStockCsv()">📊 CSV出力</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <div>
+      <label style="font-size:var(--fs-small)">大分類</label>
+      <select id="stock-filter-cat" onchange="loadStock()">
+        <option value="">すべて</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:var(--fs-small)">検索</label>
+      <input type="text" id="stock-search" placeholder="薬品名を検索…" oninput="filterStockTable()">
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="stock-table-wrap">
+      <table id="stock-table">
+        <thead>
+          <tr>
+            <th>大分類</th>
+            <th>薬品名 / 容量</th>
+            <th style="text-align:right">在庫</th>
+            <th style="text-align:right">最低数</th>
+            <th>状態</th>
+          </tr>
+        </thead>
+        <tbody id="stock-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 履歴 ===== -->
+<div class="page" id="page-history">
+  <div class="section-title" style="margin-bottom:14px">入出庫履歴</div>
+  <div class="filter-bar">
+    <div>
+      <label style="font-size:var(--fs-small)">種別</label>
+      <select id="hist-type">
+        <option value="all">すべて</option>
+        <option value="in">入庫</option>
+        <option value="out">出庫</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:var(--fs-small)">開始日</label>
+      <input type="date" id="hist-from">
+    </div>
+    <div>
+      <label style="font-size:var(--fs-small)">終了日</label>
+      <input type="date" id="hist-to">
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="loadHistory()">検索</button>
+    <button class="btn btn-amber btn-sm" onclick="exportCsv()">📊 CSV</button>
+  </div>
+  <div class="card">
+    <div id="history-list"><div style="color:var(--col-ui-mid);font-size:14px">期間を選択して検索してください</div></div>
+  </div>
+</div>
+
+<!-- ===== 設定（マスター） ===== -->
+<div class="page" id="page-master">
+  <div class="section-title" style="margin-bottom:14px">設定・マスター管理</div>
+
+  <!-- 薬品登録 -->
+  <div class="card">
+    <div class="card-title">💊 薬品の登録・編集</div>
+    <div class="form-row">
+      <label class="required">大分類</label>
+      <select id="m-cat">
+        <option value="">-- 大分類を選択 --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="required">薬品名（カナ入力推奨）</label>
+      <input type="text" id="m-name" placeholder="例：アモキシリン">
+    </div>
+    <div class="form-row">
+      <label>容量・規格</label>
+      <input type="text" id="m-volume" placeholder="例：100mL、500mg×50錠">
+    </div>
+    <div class="form-row">
+      <label>バーコード</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="m-barcode" placeholder="バーコード番号（任意）" style="flex:1">
+        <button class="btn btn-secondary btn-sm" onclick="scanForReg()">📷</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>単位</label>
+        <select id="m-unit">
+          <option>本</option><option>本/箱</option><option>錠</option><option>袋</option>
+          <option>mL</option><option>L</option><option>g</option><option>kg</option>
+          <option>個</option><option>枚</option><option>箱</option><option>缶</option>
+          <option>DS</option><option>バイアル</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>最低在庫数</label>
+        <input type="number" id="m-min-stock" min="0" value="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>備考</label>
+      <input type="text" id="m-notes" placeholder="任意">
+    </div>
+    <input type="hidden" id="m-id">
+    <div id="med-reg-result"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="clearMedForm()">クリア</button>
+      <button class="btn btn-primary" onclick="saveMedicine()">💾 保存</button>
+    </div>
+
+    <!-- バーコードスキャナー（登録用） -->
+    <div id="scanner-area-reg" style="display:none;margin-top:14px">
+      <div class="scanner-wrap">
+        <video id="video-reg" playsinline autoplay muted></video>
+        <div class="scanner-overlay">
+          <div class="scanner-guide"></div>
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 薬品マスターリスト -->
+  <div class="card">
+    <div class="card-title">📋 薬品マスターリスト</div>
+    <div class="filter-bar" style="margin-bottom:10px">
+      <select id="master-filter-cat" onchange="loadMasterList()">
+        <option value="">すべての大分類</option>
+      </select>
+      <input type="text" id="master-search" placeholder="薬品名を検索…" oninput="filterMasterList()">
+    </div>
+    <ul class="master-list" id="master-med-list"></ul>
+  </div>
+
+  <!-- 担当者管理 -->
+  <div class="card">
+    <div class="card-title">👤 担当者の管理</div>
+    <div class="form-row">
+      <label>担当者名</label>
+      <input type="text" id="staff-name-input" placeholder="担当者名を入力してください">
+      <input type="hidden" id="staff-id-input">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:16px">
+      <button class="btn btn-secondary" style="flex:0 0 80px" onclick="document.getElementById('staff-name-input').value='';document.getElementById('staff-id-input').value='';">クリア</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveStaff()">登録・更新</button>
+    </div>
+    <ul class="master-list" id="staff-list"></ul>
+  </div>
+</div>
+
+</main>
+
+<!-- ===== モーダル（入出庫訂正） ===== -->
+<div class="modal-overlay" id="correction-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="correction-modal-title">記録の訂正</div>
+      <button class="modal-close" onclick="closeModal('correction-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="correction-med-info" class="found-med" style="margin-bottom:14px"></div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="required">数量</label>
+          <input type="number" id="corr-quantity" min="1">
+        </div>
+        <div class="form-row">
+          <label class="required">日付</label>
+          <input type="date" id="corr-date">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="required">担当者</label>
+        <select id="corr-staff"></select>
+      </div>
+      <div class="form-row">
+        <label>備考</label>
+        <input type="text" id="corr-notes" placeholder="任意">
+      </div>
+      <div id="corr-result"></div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-danger" style="flex:0 0 auto;padding:10px 14px" onclick="cancelLog()">🗑 取消</button>
+        <button class="btn btn-primary" style="flex:1" onclick="updateLog()">✏️ 修正を保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル（薬品未登録バーコード） ===== -->
+<div class="modal-overlay" id="unknown-barcode-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">バーコードが未登録です</div>
+      <button class="modal-close" onclick="closeModal('unknown-barcode-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-banner alert-amber">
+        <span class="alert-icon">⚠</span>
+        <span id="unknown-barcode-text">このバーコードは登録されていません。薬品を登録しますか？</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal('unknown-barcode-modal')">キャンセル</button>
+        <button class="btn btn-primary" onclick="goToRegFromScan()">薬品を登録する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZXing バーコードリーダー -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+const API = 'https://pharma-api.YOUR_SUBDOMAIN.workers.dev'; // ← Worker の URL に変更
+let categories = [];
+let staffList  = [];
+let selectedMed = { in: null, out: null };
+let scanners = {};
+let unknownBarcode = '';
+let pendingScanTarget = '';
+let allMasterMeds = [];
+
+// ===== ユーティリティ =====
+async function api(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params });
+  const res = await fetch(`${API}?${qs}`);
+  return res.json();
+}
+async function apiPost(action, data) {
+  const res = await fetch(`${API}?action=${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+
+function showAlert(containerId, msg, type = 'success') {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `<div class="alert-banner alert-${type}"><span class="alert-icon">${type==='success'?'✅':type==='danger'?'❌':'⚠'}</span><span>${msg}</span></div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 4000);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ===== ページナビゲーション =====
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === page);
+  });
+  document.getElementById(`page-${page}`).classList.add('active');
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'stock')     loadStock();
+  if (page === 'stockin')   prepareStockPage('in');
+  if (page === 'stockout')  prepareStockPage('out');
+  if (page === 'master')    loadMasterPage();
+
+  Object.keys(scanners).forEach(k => {
+    if (k !== `${page}-scan`) stopScanner(k.replace('-scan',''));
+  });
+}
+
+// ===== 初期化 =====
+async function init() {
+  const today = new Date();
+  document.getElementById('today-date').textContent =
+    today.toLocaleDateString('ja-JP', { timeZone:'Asia/Tokyo', year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+  const todayStr = today.toLocaleDateString('sv', { timeZone:'Asia/Tokyo' });
+  document.getElementById('in-date').value  = todayStr;
+  document.getElementById('out-date').value = todayStr;
+  document.getElementById('hist-from').value = todayStr.slice(0,8) + '01';
+  document.getElementById('hist-to').value   = todayStr;
+
+  api('fix_category_name').catch(() => {});
+
+  const catRes = await api('get_categories');
+  categories = catRes.data || [];
+
+  const catOptHtml = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const mCat = document.getElementById('m-cat');
+  if (mCat) mCat.innerHTML = '<option value="">-- 大分類を選択 --</option>' + catOptHtml;
+  ['cat-select-in','cat-select-out'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = '<option value="">-- 大分類を選択 --</option>' + catOptHtml;
+  });
+  ['stock-filter-cat','master-filter-cat'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = '<option value="">すべての大分類</option>' + catOptHtml;
+  });
+
+  await loadStaffSelects();
+  loadDashboard();
+  checkGlobalAlerts();
+}
+
+// ===== 担当者セレクト =====
+async function loadStaffSelects() {
+  const res = await api('get_staff');
+  staffList = res.data || [];
+  ['in-staff','out-staff'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">-- 担当者を選択 --</option>';
+    staffList.forEach(s => sel.add(new Option(s.name, s.id)));
+  });
+}
+
+// ===== ダッシュボード =====
+async function loadDashboard() {
+  const [stockRes, logsRes] = await Promise.all([
+    api('get_stock'),
+    api('get_logs', { type: 'all', date_from: new Date().toISOString().slice(0,10), date_to: new Date().toISOString().slice(0,10) })
+  ]);
+  const stocks = stockRes.data || [];
+  const logs   = logsRes.data || [];
+
+  const alerts = stocks.filter(s => +s.is_alert);
+  document.getElementById('stat-total').textContent  = stocks.length;
+  document.getElementById('stat-alert').textContent  = alerts.length;
+  document.getElementById('stat-in-today').textContent  = logs.filter(l => l.type === 'in').reduce((a,l) => a + +l.quantity, 0);
+  document.getElementById('stat-out-today').textContent = logs.filter(l => l.type === 'out').reduce((a,l) => a + +l.quantity, 0);
+
+  const alertEl = document.getElementById('dash-alert-list');
+  if (alerts.length === 0) {
+    alertEl.innerHTML = '<p style="color:var(--col-ui-mid);font-size:14px">在庫警告なし ✅</p>';
+  } else {
+    alertEl.innerHTML = alerts.map(m =>
+      `<div class="log-item">
+        <span class="badge badge-red">残 ${m.current_stock}${m.unit}</span>
+        <div class="log-main">
+          <div class="log-name">${m.name}</div>
+          <div class="log-sub">${m.category_name} / 最低: ${m.min_stock}${m.unit}${m.volume?' / '+m.volume:''}</div>
+        </div>
+        <span class="badge badge-red">⚠ 警告</span>
+      </div>`
+    ).join('');
+  }
+
+  const logEl = document.getElementById('dash-today-log');
+  if (logs.length === 0) {
+    logEl.innerHTML = '<p style="color:var(--col-ui-mid);font-size:14px">本日の取引なし</p>';
+  } else {
+    logEl.innerHTML = logs.map(l =>
+      `<div class="log-item">
+        <span class="badge ${l.type==='in'?'badge-green':'badge-red'}">${l.type==='in'?'入庫':'出庫'}</span>
+        <div class="log-main">
+          <div class="log-name">${l.medicine_name}${l.volume?' '+l.volume:''}</div>
+          <div class="log-sub">${l.staff_name} / ${l.category_name}</div>
+        </div>
+        <span class="log-qty ${l.type==='in'?'in-qty':'out-qty'}">${l.type==='in'?'+':'-'}${l.quantity}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+async function checkGlobalAlerts() {
+  const res = await api('get_stock');
+  const cnt = (res.data || []).filter(m => +m.is_alert).length;
+  const badge = document.getElementById('global-alert-badge');
+  badge.style.display = cnt > 0 ? '' : 'none';
+  badge.textContent = `⚠ 在庫警告 ${cnt}`;
+}
+
+// ===== 入出庫ページ準備 =====
+function prepareStockPage(mode) {
+  loadStaffSelects();
+}
+
+// ===== カナ行読み込み =====
+async function loadKana(mode) {
+  const catId = document.getElementById(`cat-select-${mode}`).value;
+  if (!catId) {
+    document.getElementById(`kana-wrap-${mode}`).style.display = 'none';
+    document.getElementById(`med-wrap-${mode}`).style.display = 'none';
+    return;
+  }
+  const res = await api('get_kana_groups', { category_id: catId });
+  const groups = res.data || [];
+  const kanaWrap = document.getElementById(`kana-wrap-${mode}`);
+  const kanaTabs = document.getElementById(`kana-tabs-${mode}`);
+  kanaWrap.style.display = '';
+  kanaTabs.innerHTML =
+    `<button class="kana-tab" onclick="loadMedsByKana('${mode}','${catId}','__all__')">すべて</button>` +
+    groups.map(k =>
+      `<button class="kana-tab" onclick="loadMedsByKana('${mode}','${catId}','${k}')">${k}</button>`
+    ).join('');
+  document.getElementById(`med-wrap-${mode}`).style.display = 'none';
+  document.getElementById(`med-select-list-${mode}`).innerHTML = '<option value="">-- 薬品を選択 --</option>';
+}
+
+async function loadMedsByKana(mode, catId, kana) {
+  document.querySelectorAll(`#kana-tabs-${mode} .kana-tab`).forEach(t => {
+    t.classList.toggle('active', t.textContent === (kana === '__all__' ? 'すべて' : kana));
+  });
+  const params = kana === '__all__' ? { category_id: catId } : { category_id: catId, kana };
+  const res = await api('get_medicines', params);
+  const meds = res.data || [];
+  const sel = document.getElementById(`med-select-list-${mode}`);
+  sel.innerHTML = '<option value="">-- 薬品を選択 --</option>';
+  meds.forEach(m => {
+    const label = m.volume ? `${m.name}（${m.volume}）` : m.name;
+    sel.add(new Option(label, m.id));
+  });
+  document.getElementById(`med-wrap-${mode}`).style.display = '';
+}
+
+// ===== 薬品選択（リスト） =====
+async function selectMedicine(mode, medId) {
+  if (!medId) {
+    selectedMed[mode] = null;
+    document.getElementById(`${mode}-form-card`).style.display = 'none';
+    return;
+  }
+  const res = await api('get_medicine', { id: medId });
+  setSelectedMed(mode, res.data);
+}
+
+function setSelectedMed(mode, med) {
+  selectedMed[mode] = med;
+  const infoEl = document.getElementById(`${mode}-med-info`);
+  infoEl.innerHTML = `
+    <div class="found-med-name">💊 ${med.name}${med.volume ? '（'+med.volume+'）' : ''}</div>
+    <div class="found-med-detail">${med.category_name} / 現在庫: ${med.current_stock} ${med.unit} / 最低在庫: ${med.min_stock} ${med.unit}</div>
+  `;
+  document.getElementById(`${mode}-form-card`).style.display = '';
+  if (med.current_stock <= med.min_stock && med.min_stock > 0) {
+    infoEl.insertAdjacentHTML('afterend',
+      `<div class="alert-banner alert-danger"><span class="alert-icon">⚠</span>在庫が最低数量以下です（現在: ${med.current_stock}${med.unit}）</div>`
+    );
+  }
+}
+
+// ===== バーコードスキャナー =====
+async function toggleScanner(mode) {
+  const isOn = document.getElementById(`scan-toggle-${mode}`).checked;
+  const area  = document.getElementById(`scanner-area-${mode}`);
+  area.style.display = isOn ? '' : 'none';
+  document.getElementById(`manual-select-${mode}`).style.display = isOn ? 'none' : '';
+
+  if (isOn) {
+    startScanner(mode, `video-${mode}`, async (barcode) => {
+      stopScanner(mode);
+      document.getElementById(`scan-toggle-${mode}`).checked = false;
+      area.style.display = 'none';
+      document.getElementById(`manual-select-${mode}`).style.display = '';
+
+      const res = await api('get_medicine_by_barcode', { barcode });
+      if (res.found) {
+        setSelectedMed(mode, res.data);
+        const foundEl = document.getElementById(`found-med-${mode}`);
+        foundEl.style.display = '';
+        foundEl.innerHTML = `<div class="alert-banner alert-success"><span class="alert-icon">✅</span>バーコード認識: ${res.data.name}</div>`;
+      } else {
+        unknownBarcode = barcode;
+        pendingScanTarget = mode;
+        document.getElementById('unknown-barcode-text').textContent =
+          `バーコード「${barcode}」は未登録です。薬品を登録しますか？`;
+        openModal('unknown-barcode-modal');
+      }
+    });
+  } else {
+    stopScanner(mode);
+  }
+}
+
+function startScanner(key, videoId, onDetect) {
+  if (!window.ZXing) { alert('バーコードライブラリが読み込まれていません'); return; }
+  const hints = new Map();
+  const formats = [
+    ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
+    ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.DATA_MATRIX,
+    ZXing.BarcodeFormat.ITF, ZXing.BarcodeFormat.UPC_A
+  ];
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+
+  const reader = new ZXing.BrowserMultiFormatReader(hints);
+  scanners[key] = reader;
+  reader.decodeFromVideoDevice(null, videoId, (result, err) => {
+    if (result) onDetect(result.getText());
+  });
+}
+
+function stopScanner(key) {
+  if (scanners[key]) {
+    scanners[key].reset();
+    delete scanners[key];
+  }
+}
+
+// 登録用スキャナー
+let regScanActive = false;
+function scanForReg() {
+  const area = document.getElementById('scanner-area-reg');
+  regScanActive = !regScanActive;
+  area.style.display = regScanActive ? '' : 'none';
+  if (regScanActive) {
+    startScanner('reg', 'video-reg', (barcode) => {
+      document.getElementById('m-barcode').value = barcode;
+      stopScanner('reg');
+      regScanActive = false;
+      area.style.display = 'none';
+    });
+  } else {
+    stopScanner('reg');
+  }
+}
+
+function goToRegFromScan() {
+  closeModal('unknown-barcode-modal');
+  document.getElementById('m-barcode').value = unknownBarcode;
+  showPage('master');
+}
+
+// ===== 入庫登録 =====
+async function submitStockIn() {
+  if (!selectedMed.in) { alert('薬品を選択してください'); return; }
+  const staffId  = document.getElementById('in-staff').value;
+  const quantity = parseInt(document.getElementById('in-quantity').value);
+  const date     = document.getElementById('in-date').value;
+  const notes    = document.getElementById('in-notes').value;
+
+  if (!staffId)   { alert('担当者を選択してください'); return; }
+  if (!quantity || quantity < 1) { alert('数量を入力してください'); return; }
+
+  const res = await apiPost('stock_in', {
+    medicine_id: selectedMed.in.id, staff_id: staffId, quantity, date, notes
+  });
+
+  if (res.success) {
+    showAlert('in-result', `入庫を記録しました（現在庫: ${res.current_stock} ${selectedMed.in.unit}）`, 'success');
+    if (res.alert) showAlert('in-result', `⚠ 在庫が最低数量を下回っています（${res.current_stock}）`, 'danger');
+    resetStockForm('in');
+    checkGlobalAlerts();
+  } else {
+    showAlert('in-result', res.error || 'エラーが発生しました', 'danger');
+  }
+}
+
+// ===== 出庫登録 =====
+async function submitStockOut() {
+  if (!selectedMed.out) { alert('薬品を選択してください'); return; }
+  const staffId  = document.getElementById('out-staff').value;
+  const quantity = parseInt(document.getElementById('out-quantity').value);
+  const date     = document.getElementById('out-date').value;
+  const notes    = document.getElementById('out-notes').value;
+
+  if (!staffId)   { alert('担当者を選択してください'); return; }
+  if (!quantity || quantity < 1) { alert('数量を入力してください'); return; }
+
+  const res = await apiPost('stock_out', {
+    medicine_id: selectedMed.out.id, staff_id: staffId, quantity, date, notes
+  });
+
+  if (res.success) {
+    let msg = `出庫を記録しました（現在庫: ${res.current_stock} ${selectedMed.out.unit}）`;
+    showAlert('out-result', msg, 'success');
+    if (res.alert) showAlert('out-result', res.alert_message, 'danger');
+    resetStockForm('out');
+    checkGlobalAlerts();
+  } else {
+    showAlert('out-result', res.error || 'エラーが発生しました', 'danger');
+  }
+}
+
+function resetStockForm(mode) {
+  selectedMed[mode] = null;
+  document.getElementById(`${mode}-form-card`).style.display = 'none';
+  document.getElementById(`cat-select-${mode}`).value = '';
+  document.getElementById(`kana-wrap-${mode}`).style.display = 'none';
+  document.getElementById(`med-wrap-${mode}`).style.display = 'none';
+  const foundEl = document.getElementById(`found-med-${mode}`);
+  if (foundEl) { foundEl.style.display = 'none'; foundEl.innerHTML = ''; }
+  document.getElementById(`${mode}-quantity`).value = 1;
+  document.getElementById(`${mode}-notes`).value = '';
+}
+
+// ===== 在庫一覧 =====
+let stockData = [];
+async function loadStock() {
+  const catId = document.getElementById('stock-filter-cat').value;
+  const params = catId ? { category_id: catId } : {};
+  const res = await api('get_stock', params);
+  stockData = res.data || [];
+  renderStockTable(stockData);
+}
+
+function filterStockTable() {
+  const q = document.getElementById('stock-search').value.toLowerCase();
+  const filtered = q ? stockData.filter(m => m.name.toLowerCase().includes(q) || (m.volume||'').toLowerCase().includes(q)) : stockData;
+  renderStockTable(filtered);
+}
+
+function renderStockTable(rows) {
+  const tbody = document.getElementById('stock-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--col-ui-mid);padding:20px">データなし</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(m => `
+    <tr class="${+m.is_alert?'alert-row':''}">
+      <td><span class="badge badge-green">${m.category_name}</span></td>
+      <td>
+        <div style="font-weight:700;font-size:14px">${m.name}</div>
+        ${m.volume?`<div style="font-size:11px;color:var(--col-ui-mid)">${m.volume}</div>`:''}
+      </td>
+      <td style="text-align:right;font-weight:700;font-size:15px;color:${+m.is_alert?'var(--col-danger)':'var(--col-text)'}">${m.current_stock}<span style="font-size:11px;font-weight:400;color:var(--col-ui-mid)"> ${m.unit}</span></td>
+      <td style="text-align:right;color:var(--col-ui-mid);font-size:13px">${m.min_stock} ${m.unit}</td>
+      <td>${+m.is_alert?'<span class="badge badge-red">⚠ 警告</span>':'<span class="badge badge-green">正常</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+function exportStockCsv() {
+  window.location.href = `${API}?action=export_stock_csv`;
+}
+
+// ===== 履歴 =====
+async function loadHistory() {
+  const type = document.getElementById('hist-type').value;
+  const from = document.getElementById('hist-from').value;
+  const to   = document.getElementById('hist-to').value;
+  const res  = await api('get_logs', { type, date_from: from, date_to: to });
+  const logs = res.data || [];
+
+  const el = document.getElementById('history-list');
+  if (!logs.length) {
+    el.innerHTML = '<p style="color:var(--col-ui-mid);font-size:14px">該当データなし</p>';
+    return;
+  }
+  el.innerHTML = logs.map(l => {
+    const stockBefore = l.stock_after != null ? (l.type === 'in' ? l.stock_after - l.quantity : l.stock_after + l.quantity) : null;
+    const stockFlow = l.stock_after != null
+      ? `<div class="log-stock-flow">
+           <span class="stock-arrow ${l.type==='in'?'in-qty':'out-qty'}">${l.type==='in'?'＋':'－'}${l.quantity}</span>
+           <span class="stock-num after">${l.stock_after}${l.unit}</span>
+         </div>`
+      : `<span class="log-qty ${l.type==='in'?'in-qty':'out-qty'}">${l.type==='in'?'+':'-'}${l.quantity} ${l.unit}</span>`;
+    return `
+    <div class="log-item" style="grid-template-columns:72px auto 1fr 52px;gap:6px">
+      <div>
+        <div class="log-date">${l.transaction_date}</div>
+        <span class="badge ${l.type==='in'?'badge-green':'badge-red'}">${l.type==='in'?'入庫':'出庫'}</span>
+      </div>
+      <div class="log-main">
+        <div class="log-name">${l.medicine_name}${l.volume?' '+l.volume:''}</div>
+        <div class="log-sub">${l.category_name} / ${l.staff_name}${l.notes?' / '+l.notes:''}</div>
+      </div>
+      ${stockFlow}
+      <button style="background:var(--col-white);border:1.5px solid var(--col-border);border-radius:var(--r-sm);font-size:11px;font-weight:700;color:var(--col-text-sub);padding:4px 6px;cursor:pointer;white-space:nowrap;font-family:var(--font)" onclick='openCorrection(${JSON.stringify(l)})'>訂正</button>
+    </div>
+  `;}).join('');
+}
+
+// ===== 入出庫 訂正 =====
+let correctionTarget = null;
+
+function openCorrection(log) {
+  correctionTarget = log;
+  const isIn = log.type === 'in';
+  document.getElementById('correction-modal-title').textContent = (isIn ? '入庫' : '出庫') + '記録の訂正';
+  document.getElementById('correction-med-info').innerHTML =
+    `<div class="found-med-name">💊 ${log.medicine_name}${log.volume ? '（' + log.volume + '）' : ''}</div>
+     <div class="found-med-detail">${log.category_name} / ${isIn ? '入庫' : '出庫'}日: ${log.transaction_date} / ${log.quantity}${log.unit}</div>`;
+  document.getElementById('corr-quantity').value  = log.quantity;
+  document.getElementById('corr-date').value      = log.transaction_date;
+  document.getElementById('corr-notes').value     = log.notes || '';
+  document.getElementById('corr-result').innerHTML = '';
+  const sel = document.getElementById('corr-staff');
+  sel.innerHTML = '<option value="">-- 担当者を選択 --</option>';
+  staffList.forEach(s => {
+    const opt = new Option(s.name, s.id);
+    if (s.name === log.staff_name) opt.selected = true;
+    sel.add(opt);
+  });
+  openModal('correction-modal');
+}
+
+async function updateLog() {
+  if (!correctionTarget) return;
+  const qty     = parseInt(document.getElementById('corr-quantity').value);
+  const date    = document.getElementById('corr-date').value;
+  const staffId = document.getElementById('corr-staff').value;
+  const notes   = document.getElementById('corr-notes').value;
+  if (!qty || qty < 1) { showAlert('corr-result', '数量を入力してください', 'danger'); return; }
+  if (!date)           { showAlert('corr-result', '日付を入力してください', 'danger'); return; }
+  if (!staffId)        { showAlert('corr-result', '担当者を選択してください', 'danger'); return; }
+  const action = correctionTarget.type === 'in' ? 'update_stock_in' : 'update_stock_out';
+  const res = await apiPost(action, { id: correctionTarget.id, quantity: qty, date, staff_id: staffId, notes });
+  if (res.success) {
+    showAlert('corr-result', res.message + `（現在庫: ${res.current_stock}）`, 'success');
+    setTimeout(() => { closeModal('correction-modal'); loadHistory(); checkGlobalAlerts(); }, 1500);
+  } else {
+    showAlert('corr-result', res.error || 'エラーが発生しました', 'danger');
+  }
+}
+
+async function cancelLog() {
+  if (!correctionTarget) return;
+  const label = correctionTarget.type === 'in' ? '入庫' : '出庫';
+  if (!confirm(`この${label}記録を取消しますか？\n${correctionTarget.transaction_date} / ${correctionTarget.medicine_name} / ${correctionTarget.quantity}${correctionTarget.unit}\n※在庫数も元に戻ります`)) return;
+  const action = correctionTarget.type === 'in' ? 'cancel_stock_in' : 'cancel_stock_out';
+  const res = await apiPost(action, { id: correctionTarget.id });
+  if (res.success) {
+    showAlert('corr-result', res.message + `（現在庫: ${res.current_stock}）`, 'success');
+    setTimeout(() => { closeModal('correction-modal'); loadHistory(); checkGlobalAlerts(); }, 1500);
+  } else {
+    showAlert('corr-result', res.error || 'エラーが発生しました', 'danger');
+  }
+}
+
+function exportCsv() {
+  const type = document.getElementById('hist-type').value;
+  const from = document.getElementById('hist-from').value;
+  const to   = document.getElementById('hist-to').value;
+  window.location.href = `${API}?action=export_csv&type=${type}&date_from=${from}&date_to=${to}`;
+}
+
+// ===== マスター管理ページ =====
+async function loadMasterPage() {
+  if (categories.length === 0) {
+    const catRes = await api('get_categories');
+    categories = catRes.data || [];
+  }
+  const catOptHtml = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const mCat = document.getElementById('m-cat');
+  if (mCat) mCat.innerHTML = '<option value="">-- 大分類を選択 --</option>' + catOptHtml;
+  const mfCat = document.getElementById('master-filter-cat');
+  if (mfCat) mfCat.innerHTML = '<option value="">すべての大分類</option>' + catOptHtml;
+
+  await Promise.all([loadMasterList(), loadStaffList()]);
+}
+
+async function loadMasterList() {
+  const catId = document.getElementById('master-filter-cat').value;
+  const params = catId ? { category_id: catId } : {};
+  const res = await api('get_medicines', params);
+  allMasterMeds = res.data || [];
+  renderMasterList(allMasterMeds);
+}
+
+function filterMasterList() {
+  const q = document.getElementById('master-search').value.toLowerCase();
+  const filtered = q ? allMasterMeds.filter(m => m.name.toLowerCase().includes(q)) : allMasterMeds;
+  renderMasterList(filtered);
+}
+
+function renderMasterList(meds) {
+  const ul = document.getElementById('master-med-list');
+  if (!meds.length) {
+    ul.innerHTML = '<li style="color:var(--col-ui-mid);font-size:14px;padding:10px 0">登録なし</li>';
+    return;
+  }
+  ul.innerHTML = meds.map(m => `
+    <li class="master-item">
+      <div class="master-item-name">
+        <div style="font-weight:700">${m.name}${m.volume?' <span style="font-size:11px;color:var(--col-ui-mid)">（'+m.volume+'）</span>':''}</div>
+        <div style="font-size:11px;color:var(--col-ui-mid)">${m.category_name} / 最低在庫: ${m.min_stock}${m.unit} / 現在庫: ${m.current_stock}${m.unit}</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="editMedicine(${m.id})">編集</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteMedicine(${m.id},'${m.name}')">削除</button>
+    </li>
+  `).join('');
+}
+
+async function editMedicine(id) {
+  const res = await api('get_medicine', { id });
+  const m = res.data;
+  document.getElementById('m-id').value        = m.id;
+  document.getElementById('m-cat').value       = m.category_id;
+  document.getElementById('m-name').value      = m.name;
+  document.getElementById('m-volume').value    = m.volume || '';
+  document.getElementById('m-barcode').value   = m.barcode || '';
+  document.getElementById('m-unit').value      = m.unit;
+  document.getElementById('m-min-stock').value = m.min_stock;
+  document.getElementById('m-notes').value     = m.notes || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearMedForm() {
+  ['m-id','m-name','m-volume','m-barcode','m-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('m-cat').selectedIndex = 0;
+  document.getElementById('m-unit').value = '本';
+  document.getElementById('m-min-stock').value = 0;
+}
+
+async function saveMedicine() {
+  const data = {
+    id:         document.getElementById('m-id').value || null,
+    category_id: document.getElementById('m-cat').value,
+    name:       document.getElementById('m-name').value.trim(),
+    volume:     document.getElementById('m-volume').value.trim(),
+    barcode:    document.getElementById('m-barcode').value.trim(),
+    unit:       document.getElementById('m-unit').value,
+    min_stock:  document.getElementById('m-min-stock').value,
+    notes:      document.getElementById('m-notes').value.trim(),
+  };
+  if (!data.category_id || !data.name) { alert('大分類と薬品名は必須です'); return; }
+  const res = await apiPost('save_medicine', data);
+  if (res.success) {
+    showAlert('med-reg-result', res.message, 'success');
+    clearMedForm();
+    loadMasterList();
+    const allRes = await api('get_medicines', {});
+    allMasterMeds = allRes.data || [];
+  } else {
+    showAlert('med-reg-result', res.error, 'danger');
+  }
+}
+
+async function deleteMedicine(id, name) {
+  if (!confirm(`「${name}」を削除しますか？（入出庫履歴は残ります）`)) return;
+  const res = await apiPost('delete_medicine', { id });
+  if (res.success) { loadMasterList(); checkGlobalAlerts(); }
+}
+
+// ===== 担当者管理 =====
+async function loadStaffList() {
+  const res = await api('get_staff');
+  const ul = document.getElementById('staff-list');
+  staffList = res.data || [];
+  ul.innerHTML = staffList.map(s => `
+    <li class="master-item">
+      <span class="master-item-name">${s.name}</span>
+      <button class="btn btn-sm btn-secondary" onclick="editStaff(${s.id},'${s.name}')">編集</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id},'${s.name}')">削除</button>
+    </li>
+  `).join('');
+}
+
+function editStaff(id, name) {
+  document.getElementById('staff-id-input').value   = id;
+  document.getElementById('staff-name-input').value = name;
+}
+
+async function saveStaff() {
+  const name = document.getElementById('staff-name-input').value.trim();
+  const id   = document.getElementById('staff-id-input').value;
+  if (!name) { alert('担当者名を入力してください'); return; }
+  const res = await apiPost('save_staff', { id: id || null, name });
+  if (res.success) {
+    document.getElementById('staff-name-input').value = '';
+    document.getElementById('staff-id-input').value   = '';
+    loadStaffList();
+    loadStaffSelects();
+  }
+}
+
+async function deleteStaff(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  await apiPost('delete_staff', { id });
+  loadStaffList();
+  loadStaffSelects();
+}
+
+// ===== 起動 =====
+init();
+</script>
+</body>
+</html>
