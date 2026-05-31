@@ -1169,9 +1169,10 @@ async function loadStaffSelects() {
 
 // ===== ダッシュボード =====
 async function loadDashboard() {
+  const todayJST = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' });
   const [stockRes, logsRes] = await Promise.all([
     api('get_stock'),
-    api('get_logs', { type: 'all', date_from: new Date().toISOString().slice(0,10), date_to: new Date().toISOString().slice(0,10) })
+    api('get_logs', { type: 'all', date_from: todayJST, date_to: todayJST })
   ]);
   const stocks = stockRes.data || [];
   const logs   = logsRes.data || [];
