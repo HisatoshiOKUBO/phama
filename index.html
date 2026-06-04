@@ -1582,6 +1582,16 @@ async function exportCsv() {
   if (!logs.length) { alert('出力対象データがありません'); return; }
 
   const BOM = '\uFEFF';
+
+  // 日付を YYYY/MM/DD 形式に変換
+  const fmtDate = str => str ? str.replace(/-/g, '/') : '';
+  const fromDisp = fmtDate(from);
+  const toDisp   = fmtDate(to);
+
+  // 先頭2行：タイトル・期間
+  const titleRow  = `"薬品庫入出庫履歴"`;
+  const periodRow = `"出力範囲：${fromDisp}～${toDisp}"`;
+
   const header = ['種別','日付','大分類','薬品名','容量','数量','在庫','単位','担当者','備考'];
   const rows = logs.map(l => {
     const isIn    = l.type === 'in';
@@ -1603,7 +1613,21 @@ async function exportCsv() {
     ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
   });
 
-  const csvContent = BOM + [header.join(','), ...rows].join('\r\n');
+  // 末尾2行：確認日・確認者
+  const emptyRow    = '';
+  const confirmDate = `"確認日：＿＿＿＿＿＿＿＿"`;
+  const confirmName = `"確認者：＿＿＿＿＿＿＿＿"`;
+
+  const csvContent = BOM + [
+    titleRow,
+    periodRow,
+    '',
+    header.join(','),
+    ...rows,
+    emptyRow,
+    confirmDate,
+    confirmName
+  ].join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
