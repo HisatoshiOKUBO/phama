@@ -1492,24 +1492,25 @@ async function loadHistory() {
     return;
   }
   el.innerHTML = logs.map(l => {
-    const stockBefore = l.stock_after != null ? (l.type === 'in' ? l.stock_after - l.quantity : l.stock_after + l.quantity) : null;
-    const stockFlow = l.stock_after != null
-      ? `<div class="log-stock-flow">
-           <span class="stock-arrow ${l.type==='in'?'in-qty':'out-qty'}">${l.type==='in'?'＋':'－'}${l.quantity}</span>
-           <span class="stock-num after">${l.stock_after}${l.unit}</span>
-         </div>`
-      : `<span class="log-qty ${l.type==='in'?'in-qty':'out-qty'}">${l.type==='in'?'+':'-'}${l.quantity} ${l.unit}</span>`;
+    const isIn    = l.type === 'in';
+    const qtySign = isIn ? '＋' : '－';
+    const stockAfterHtml = l.stock_after != null
+      ? `<div style="font-size:11px;color:var(--col-ui-mid);text-align:right;margin-top:2px">在庫: <strong style="color:var(--col-text)">${l.stock_after}${l.unit}</strong></div>`
+      : '';
     return `
     <div class="log-item" style="grid-template-columns:72px auto 1fr 52px;gap:6px">
       <div>
         <div class="log-date">${l.transaction_date}</div>
-        <span class="badge ${l.type==='in'?'badge-green':'badge-red'}">${l.type==='in'?'入庫':'出庫'}</span>
+        <span class="badge ${isIn?'badge-green':'badge-red'}">${isIn?'入庫':'出庫'}</span>
       </div>
       <div class="log-main">
         <div class="log-name">${l.medicine_name}${l.volume?' '+l.volume:''}</div>
         <div class="log-sub">${l.category_name} / ${l.staff_name}${l.notes?' / '+l.notes:''}</div>
       </div>
-      ${stockFlow}
+      <div style="text-align:right;white-space:nowrap">
+        <span class="log-qty ${isIn?'in-qty':'out-qty'}" style="font-size:15px;font-weight:700">${qtySign}${l.quantity} ${l.unit}</span>
+        ${stockAfterHtml}
+      </div>
       <button style="background:var(--col-white);border:1.5px solid var(--col-border);border-radius:var(--r-sm);font-size:11px;font-weight:700;color:var(--col-text-sub);padding:4px 6px;cursor:pointer;white-space:nowrap;font-family:var(--font)" onclick='openCorrection(${JSON.stringify(l)})'>訂正</button>
     </div>
   `;}).join('');
@@ -1572,11 +1573,48 @@ async function cancelLog() {
   }
 }
 
-function exportCsv() {
+async function exportCsv() {
   const type = document.getElementById('hist-type').value;
   const from = document.getElementById('hist-from').value;
   const to   = document.getElementById('hist-to').value;
-  window.location.href = `${API}?action=export_csv&type=${type}&date_from=${from}&date_to=${to}`;
+  const res  = await api('get_logs', { type, date_from: from, date_to: to });
+  const logs = res.data || [];
+  if (!logs.length) { alert('出力対象データがありません'); return; }
+
+  const BOM = '\uFEFF';
+  const header = ['種別','日付','大分類','薬品名','容量','数量','在庫','単位','担当者','備考'];
+  const rows = logs.map(l => {
+    const isIn    = l.type === 'in';
+    const qty     = isIn ? `+${l.quantity}` : `-${l.quantity}`;
+    const stock   = l.stock_after != null ? l.stock_after : '';
+    const volume  = l.volume  || '';
+    const notes   = l.notes   || '';
+    return [
+      isIn ? '入庫' : '出庫',
+      l.transaction_date,
+      l.category_name,
+      l.medicine_name,
+      volume,
+      qty,
+      stock,
+      l.unit,
+      l.staff_name,
+      notes
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+
+  const csvContent = BOM + [header.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const fromLabel = from || 'start';
+  const toLabel   = to   || 'end';
+  a.href     = url;
+  a.download = `入出庫履歴_${fromLabel}_${toLabel}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ===== マスター管理ページ =====
