@@ -630,6 +630,128 @@ tr.alert-row:hover td { background: #fee2e2; }
 .found-med-name   { font-weight: 700; font-size: var(--fs-base); color: var(--col-confirm); }
 .found-med-detail { font-size: var(--fs-label); color: var(--col-text-sub); margin-top: 2px; }
 
+/* ===== ヘルプボタン ===== */
+.btn-help {
+  background: none;
+  border: 1.5px solid var(--col-border);
+  border-radius: var(--r-sm);
+  color: var(--col-text-sub);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background .13s, border-color .13s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-help:hover { background: var(--col-hover); border-color: var(--col-ui-mid); }
+
+/* ===== ヘルプモーダル ===== */
+.help-modal {
+  max-width: 560px;
+  max-height: 88vh;
+}
+.help-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 18px;
+}
+.help-nav-btn {
+  padding: 5px 11px;
+  background: var(--col-white);
+  border: 1.5px solid var(--col-border);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--col-text-sub);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .13s;
+}
+.help-nav-btn.active,
+.help-nav-btn:hover {
+  background: var(--col-confirm);
+  border-color: var(--col-confirm);
+  color: white;
+}
+.help-section { display: none; }
+.help-section.active { display: block; }
+.help-section h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--col-confirm);
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.help-section p {
+  font-size: 13px;
+  color: var(--col-text-sub);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.help-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--col-ui-light);
+}
+.help-step:last-child { border-bottom: none; }
+.help-step-num {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  background: var(--col-green);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.help-step-body { flex: 1; font-size: 13px; color: var(--col-text); line-height: 1.6; }
+.help-step-body strong { color: var(--col-confirm); }
+.help-tip {
+  background: var(--col-amber-bg);
+  border-left: 3px solid var(--col-amber);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--col-amber);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.help-table th {
+  background: var(--col-card-bg);
+  color: var(--col-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1.5px solid var(--col-border);
+}
+.help-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--col-ui-light);
+  color: var(--col-text);
+  vertical-align: top;
+}
+.help-table tr:last-child td { border-bottom: none; }
+
 /* ===== スマートフォン最適化 ===== */
 @media (max-width: 480px) {
   .page { padding: 14px 12px; }
@@ -655,6 +777,7 @@ tr.alert-row:hover td { background: #fee2e2; }
       <span>薬品在庫管理</span>
     </div>
     <div id="global-alert-badge" class="alert-badge" style="display:none" onclick="showPage('stock')">⚠ 在庫警告</div>
+    <button class="btn-help" onclick="openModal('help-modal')">❓ ヘルプ</button>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('dashboard')" data-page="dashboard">
@@ -1066,6 +1189,173 @@ tr.alert-row:hover td { background: #fee2e2; }
   </div>
 </div>
 
+
+<!-- ===== ヘルプモーダル ===== -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal help-modal">
+    <div class="modal-header">
+      <div class="modal-title">❓ 使い方ガイド</div>
+      <button class="modal-close" onclick="closeModal('help-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- タブナビ -->
+      <div class="help-nav">
+        <button class="help-nav-btn active" onclick="showHelpSection('overview')">🏠 概要</button>
+        <button class="help-nav-btn" onclick="showHelpSection('stockin')">📥 入庫</button>
+        <button class="help-nav-btn" onclick="showHelpSection('stockout')">📤 出庫</button>
+        <button class="help-nav-btn" onclick="showHelpSection('stock')">📦 在庫確認</button>
+        <button class="help-nav-btn" onclick="showHelpSection('history')">📋 履歴</button>
+        <button class="help-nav-btn" onclick="showHelpSection('master')">⚙️ 設定</button>
+        <button class="help-nav-btn" onclick="showHelpSection('trouble')">🆘 困ったとき</button>
+      </div>
+
+      <!-- 概要 -->
+      <div class="help-section active" id="help-overview">
+        <h3>🏠 システム概要</h3>
+        <p>このシステムは養豚場の薬品在庫をスマートフォン・PCで管理するためのアプリです。入庫・出庫を記録し、在庫数をリアルタイムに把握できます。</p>
+        <table class="help-table">
+          <thead><tr><th>画面</th><th>できること</th></tr></thead>
+          <tbody>
+            <tr><td>🏠 ホーム</td><td>在庫警告・本日の取引を一覧表示</td></tr>
+            <tr><td>📥 入庫</td><td>薬品の入庫数量を記録する</td></tr>
+            <tr><td>📤 出庫</td><td>薬品の出庫数量を記録する</td></tr>
+            <tr><td>📦 在庫</td><td>全薬品の現在庫を確認・CSV出力</td></tr>
+            <tr><td>📋 履歴</td><td>入出庫の履歴検索・訂正・CSV出力</td></tr>
+            <tr><td>⚙️ 設定</td><td>薬品・担当者の登録・編集</td></tr>
+          </tbody>
+        </table>
+        <div class="help-tip">💡 画面上部の <strong>⚠ 在庫警告</strong> バッジが表示されたら、最低在庫数を下回っている薬品があります。タップすると在庫一覧に移動します。</div>
+      </div>
+
+      <!-- 入庫 -->
+      <div class="help-section" id="help-stockin">
+        <h3>📥 入庫の登録</h3>
+        <p>新たに薬品を受け取ったときに記録します。</p>
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body"><strong>薬品を選ぶ</strong>：大分類 → 50音タブ → 薬品名の順に選択。バーコードスキャンでも選択できます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body"><strong>数量・日付を入力</strong>：入庫数量と入庫日を入力します（今日の日付が自動で入ります）。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body"><strong>担当者を選ぶ</strong>：プルダウンから担当者を選択します。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body"><strong>「入庫を登録する」をタップ</strong>：完了すると現在庫数が自動で増えます。</div>
+        </div>
+        <div class="help-tip">📷 バーコードスキャンを使うには「バーコードでスキャン」トグルをオンにして、ラベルにカメラを向けてください。未登録バーコードの場合は薬品登録画面に案内します。</div>
+      </div>
+
+      <!-- 出庫 -->
+      <div class="help-section" id="help-stockout">
+        <h3>📤 出庫の登録</h3>
+        <p>薬品を使用・払い出したときに記録します。手順は入庫と同じです。</p>
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body"><strong>薬品を選ぶ</strong>：大分類 → 50音タブ → 薬品名、またはバーコードスキャンで選択。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body"><strong>数量・日付・担当者を入力</strong>して「出庫を登録する」をタップ。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body"><strong>在庫不足の場合はエラー</strong>になります。現在庫数以上の出庫は登録できません。</div>
+        </div>
+        <div class="help-tip">⚠️ 在庫が最低在庫数を下回ると警告が表示されます。発注の目安にしてください。</div>
+      </div>
+
+      <!-- 在庫確認 -->
+      <div class="help-section" id="help-stock">
+        <h3>📦 在庫確認</h3>
+        <p>全薬品の現在の在庫数を確認できます。</p>
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body"><strong>大分類で絞り込み</strong>：プルダウンで特定カテゴリの薬品のみ表示できます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body"><strong>薬品名で検索</strong>：テキストボックスに入力するとリアルタイムで絞り込まれます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body"><strong>「⚠ 警告」バッジ</strong>が付いている薬品は在庫が最低数量以下です。優先的に補充してください。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body"><strong>「📊 CSV出力」</strong>をタップすると在庫一覧をExcel形式でダウンロードできます。</div>
+        </div>
+      </div>
+
+      <!-- 履歴 -->
+      <div class="help-section" id="help-history">
+        <h3>📋 入出庫履歴</h3>
+        <p>過去の入出庫記録を検索・確認・訂正できます。</p>
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body"><strong>種別・期間を設定</strong>して「検索」ボタンをタップ。入庫のみ・出庫のみ・すべてで絞り込めます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body"><strong>各行の「訂正」ボタン</strong>をタップすると、数量・日付・担当者を修正できます。在庫数も自動で再計算されます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body"><strong>「🗑 取消」</strong>をタップするとその記録を削除し、在庫数を元に戻します（操作は取り消せません）。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body"><strong>「📊 CSV」</strong>で検索結果をExcel形式でダウンロード。確認日・確認者欄付きの様式で出力されます。</div>
+        </div>
+      </div>
+
+      <!-- 設定 -->
+      <div class="help-section" id="help-master">
+        <h3>⚙️ 設定・マスター管理</h3>
+        <p>薬品マスターと担当者を登録・編集できます。</p>
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body"><strong>薬品の新規登録</strong>：大分類・薬品名（必須）、容量・バーコード・最低在庫数などを入力して「💾 保存」をタップ。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body"><strong>薬品の編集</strong>：薬品マスターリストの「編集」ボタンをタップするとフォームに情報が読み込まれます。修正後に「💾 保存」。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body"><strong>薬品の削除</strong>：「削除」ボタンで論理削除されます。入出庫履歴は保持されます。</div>
+        </div>
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body"><strong>担当者の登録</strong>：名前を入力して「登録・更新」。「編集」ボタンで名前欄に読み込まれます。</div>
+        </div>
+        <div class="help-tip">📷 バーコードの📷ボタンでカメラからバーコードを読み取り、薬品に紐付けられます。次回から薬品選択時にスキャンで素早く選択できるようになります。</div>
+      </div>
+
+      <!-- 困ったとき -->
+      <div class="help-section" id="help-trouble">
+        <h3>🆘 困ったとき</h3>
+        <table class="help-table">
+          <thead><tr><th>症状</th><th>対処法</th></tr></thead>
+          <tbody>
+            <tr><td>データが表示されない</td><td>画面を再読み込み（F5 / 引っ張り更新）してください。Supabaseが一時停止している可能性があります。</td></tr>
+            <tr><td>入庫・出庫が登録できない</td><td>薬品・担当者・数量・日付がすべて入力されているか確認してください。</td></tr>
+            <tr><td>在庫数がおかしい</td><td>履歴画面で記録を確認し、誤った記録を「訂正」または「取消」してください。</td></tr>
+            <tr><td>バーコードが読み取れない</td><td>カメラへのアクセス許可を確認してください。明るい場所でゆっくりかざすと認識しやすくなります。</td></tr>
+            <tr><td>担当者が選べない</td><td>⚙️設定画面で担当者が登録されているか確認してください。</td></tr>
+            <tr><td>バーコードが未登録と出る</td><td>案内に従い⚙️設定画面でその薬品を登録してください。バーコード欄に自動で入力されます。</td></tr>
+          </tbody>
+        </table>
+        <div class="help-tip">💡 最低在庫数を設定しておくと、在庫が少なくなったときにホーム画面と在庫一覧で警告が表示されます。発注タイミングの目安になります。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ZXing バーコードリーダー -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script>
@@ -1102,6 +1392,19 @@ function showAlert(containerId, msg, type = 'success') {
 
 function openModal(id)  { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ===== ヘルプセクション切替 =====
+function showHelpSection(section) {
+  document.querySelectorAll('.help-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.help-nav-btn').forEach(btn => btn.classList.remove('active'));
+  const targetEl = document.getElementById('help-' + section);
+  if (targetEl) targetEl.classList.add('active');
+  document.querySelectorAll('.help-nav-btn').forEach(btn => {
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + section + "'")) {
+      btn.classList.add('active');
+    }
+  });
+}
 
 // ===== ページナビゲーション =====
 function showPage(page) {
@@ -1225,8 +1528,8 @@ async function checkGlobalAlerts() {
 }
 
 // ===== 入出庫ページ準備 =====
-function prepareStockPage(mode) {
-  loadStaffSelects();
+async function prepareStockPage(mode) {
+  await loadStaffSelects();
 }
 
 // ===== カナ行読み込み =====
